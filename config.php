@@ -1,0 +1,5 @@
+<?php
+// Claves de Stripe
+define('STRIPE_SECRET_KEY', 'sk_test_51Qs6i4EDMQKkphbDr8TSx3E63oq4qGs35gOr4A46DladIS3A96wsUPkm5YdhkbFSsn3CIhkUnngYGkiS0nsGes2l002ylBj3o7');
+define('STRIPE_PUBLISHABLE_KEY', 'pk_test_51Qs6i4EDMQKkphbDxcrHaAsXVvayQz3GTpjGL0Ql42dnn61XxWKtQU4zHytX7FpusQSHYMkQMyP3OrFXUPBIueJy00vHDnZ2Hm');
+?>
