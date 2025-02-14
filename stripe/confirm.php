@@ -1,6 +1,6 @@
 <?php
-require 'vendor/autoload.php';
-require 'config.php';
+require '../vendor/autoload.php';
+require '../config/config.php';
 
 // Establecer clave secreta de Stripe
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
