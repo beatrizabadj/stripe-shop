@@ -3,6 +3,7 @@ require '../vendor/autoload.php';
 require '../config/config.php';
 require '../db/db.php';
 
+
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -23,7 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'currency' => 'usd',
             'product' => $product->id,
         ]);
+        $mysqli = new mysqli("localhost", "root", "", "stripe_payments");
 
+        // Verifica si hay errores en la conexión
+        if ($mysqli->connect_error) {
+            die("Error de conexión: " . $mysqli->connect_error);
+        }else{
+            echo 'Conexion correcta';
+        }
         // Guardar en la base de datos
         $stmt = $conn->prepare("INSERT INTO products (name, description, price, stripe_product_id, stripe_price_id) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("ssiss", $productName, $productDesc, $productPrice, $product->id, $price->id);

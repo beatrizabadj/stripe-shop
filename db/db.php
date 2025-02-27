@@ -46,5 +46,5 @@ if ($conn->query($sqlTransactions) === TRUE) {
 }
 
 // Cerrar la conexión
-$conn->close();
+// $conn->close();
 ?>
