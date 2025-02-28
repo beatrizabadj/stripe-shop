@@ -7,7 +7,8 @@ window.onload = () => {
             
             const card = boton.closest(".card");
             const nombre = card.querySelector(".card-title").innerText;
-            const precio = card.querySelector(".card-text").innerText.replace("$ ", "").replace(",", "");
+            const precioTexto = card.querySelector(".card-text").innerText;
+            const precio = parseFloat(precioTexto.replace(/[^\d.-]/g, ''));
             
             let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
             carrito.push({ nombre, precio: parseFloat(precio) });

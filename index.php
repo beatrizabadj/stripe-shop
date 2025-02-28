@@ -30,10 +30,7 @@ $result = $conn->query("SELECT * FROM products");
         <div class="collapse navbar-collapse" id="navbarHeader">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a href="#" class="nav-link active">Catalogo</a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link">Contacto</a>
+              <a href="index.php" class="nav-link active">Catalogo</a>
             </li>
           </ul>
           <a href="pagoTarjeta.php" class="btn btn-primary">Carrito</a>
