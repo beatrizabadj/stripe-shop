@@ -2,6 +2,7 @@
 require './db/db.php';
 
 // Realizamos la consulta a la base de datos
+$conn-> query("USE stripe_payments");
 $result = $conn->query("SELECT * FROM products");
 
 ?>
@@ -50,7 +51,7 @@ $result = $conn->query("SELECT * FROM products");
             while ($row = $result->fetch_assoc()) {
                 $productName = $row['name'];
                 $productDesc = $row['description'];
-                $productPrice = $row['price'] / 100; // Convertimos de centavos a USD
+                $productPrice = $row['price']; // Convertimos de centavos a USD
                 $productImage = "https://via.placeholder.com/300"; // Puedes agregar lógica para tener imágenes dinámicas
                 ?>
                 <div class="col">

@@ -2,6 +2,7 @@
 require './db/db.php';
 
 header('Content-Type: application/json'); 
+$conn-> query("USE stripe_payments");
 
 $result = $conn->query("SELECT id, name, description, price, stripe_price_id FROM products");
 

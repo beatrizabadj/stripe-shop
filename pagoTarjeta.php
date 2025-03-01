@@ -2,6 +2,7 @@
 require './db/db.php';
 
 // Realizamos la consulta a la base de datos
+$conn-> query("USE stripe_payments");
 $result = $conn->query("SELECT * FROM products");
 ?>
 
