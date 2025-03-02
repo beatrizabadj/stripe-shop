@@ -8,7 +8,8 @@ window.onload = () => {
             console.log("Carrito vaciado.");
         });
     }
-    // Simulación de productos seleccionados (esto normalmente vendría de localStorage)
+
+    // Obtener los productos seleccionados desde localStorage
     const productosSeleccionados = JSON.parse(localStorage.getItem('carrito')) || [];
     console.log(productosSeleccionados); // Verifica los productos
 
@@ -22,7 +23,7 @@ window.onload = () => {
         // Mostrar productos en el resumen
         productosSeleccionados.forEach(producto => {
             console.log(producto); // Verificar cada producto
-            if (producto.precio && !isNaN(producto.precio)) {
+            if (producto.precio && !isNaN(producto.precio) && producto.precio > 0) {
                 total += producto.precio;
                 cartSummary.innerHTML += `
                     <li class="list-group-item d-flex justify-content-between">
@@ -31,11 +32,11 @@ window.onload = () => {
                     </li>
                 `;
             } else {
-                console.log(`Producto con precio inválido: ${producto.nombre}`);
+                console.log(`⚠️ Producto con precio inválido: ${producto.nombre}`, producto);
             }
         });
     }
-    
+
     // Mostrar el total de la compra
     console.log("Total calculado:", total); // Verifica el valor total
     cartSummary.innerHTML += `
@@ -45,11 +46,12 @@ window.onload = () => {
         </li>
     `;
 
-    // Stripe setup
-    var stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
+    // Stripe Elements (Pago en el mismo sitio)
+    var stripe = Stripe('pk_test_51Qs6i4EDMQKkphbDxcrHaAsXVvayQz3GTpjGL0Ql42dnn61XxWKtQU4zHytX7FpusQSHYMkQMyP3OrFXUPBIueJy00vHDnZ2Hm');
     var elements = stripe.elements();
     var card = elements.create('card');
     card.mount('#card-element');
+
     card.on('change', function(event) {
         var displayError = document.getElementById('card-errors');
         if (event.error) {
@@ -58,26 +60,50 @@ window.onload = () => {
             displayError.textContent = '';
         }
     });
+
     var form = document.getElementById('payment-form');
     form.addEventListener('submit', function(event) {
         event.preventDefault();
+
         var cardholderName = document.getElementById('cardholder-name').value.trim();
         if (!cardholderName) {
             alert("Por favor ingrese el nombre del titular de la tarjeta.");
             return;
         }
+
         stripe.createToken(card).then(function(result) {
             if (result.error) {
-                var errorElement = document.getElementById('card-errors');
-                errorElement.textContent = result.error.message;
+                document.getElementById('card-errors').textContent = result.error.message;
             } else {
-                var hiddenInput = document.createElement('input');
-                hiddenInput.setAttribute('type', 'hidden');
-                hiddenInput.setAttribute('name', 'stripeToken');
-                hiddenInput.setAttribute('value', result.token.id);
-                form.appendChild(hiddenInput);
-                form.submit();
+                console.log("Token generado:", result.token.id);
+                
+                // Enviar el token al backend para procesar el pago
+                fetch('http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/stripe/checkout.php', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        stripeToken: result.token.id,
+                        amount: total * 100,  // Convert total to cents
+                        description: "Compra en tienda online",
+                        cardholderName: cardholderName
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        //alert("Pago realizado con éxito");
+                        window.location.href = "/M12-Proyecto-PHP-Natalia-Beatriz/pagoExitoso.html";
+                    } else {
+                        alert("Error en el pago: " + data.message);
+                    }
+                })
+                .catch(error => console.error('Error al procesar la compra:', error));
             }
         });
+    });
+
+    // Habilitar o deshabilitar el botón de pago según el checkbox
+    document.getElementById('terms-checkbox').addEventListener('change', function () {
+        document.getElementById('submit-button').disabled = !this.checked;
     });
 };

@@ -4,27 +4,49 @@ require_once __DIR__ . '/../config/config.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
+// Recibir datos del frontend
 $input = json_decode(file_get_contents("php://input"), true);
+$stripeToken = $input['stripeToken'] ?? null;
+$amount = $input['amount'] ?? 0;
+$description = $input['description'] ?? "Pago sin descripción";
+$cardholderName = $input['cardholderName'] ?? 'Anonimo'; // Recibir el nombre del titular
 
-$line_items = [];
-foreach ($input['productos'] as $producto) {
-    $line_items[] = [
-        'price_data' => [
-            'currency' => 'usd',
-            'product_data' => ['name' => $producto['nombre']],
-            'unit_amount' => $producto['precio'] * 100
-        ],
-        'quantity' => 1
-    ];
+// Validar que tenemos el token y un monto válido
+if (!$stripeToken || $amount <= 0) {
+    echo json_encode(['status' => 'error', 'message' => 'Datos inválidos']);
+    exit;
 }
 
-$session = \Stripe\Checkout\Session::create([
-    'payment_method_types' => ['card'],
-    'line_items' => $line_items,
-    'mode' => 'payment',
-    'success_url' => 'http://localhost/success.php',
-    'cancel_url' => 'http://localhost/cancel.php'
-]);
+try {
+    // Crear el pago con el token
+    $charge = \Stripe\Charge::create([
+        'amount' => $amount, // Monto en centavos
+        'currency' => 'usd',
+        'description' => $description,
+        'source' => $stripeToken, // Token de la tarjeta
+    ]);
 
-echo json_encode(['url' => $session->url]);
+    if ($charge->status == 'succeeded') {
+        $conn = new mysqli("localhost", "root", "", "stripe_payments");
+        if ($conn->connect_error) {
+            die("Conexión fallida: " . $conn->connect_error);
+        }
+
+        $status = "paid";
+        $stmt = $conn->prepare("INSERT INTO transactions (name, amount, status) VALUES (?, ?, ?)");
+        $stmt->bind_param("sds", $cardholderName, $amount, $status);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        echo json_encode(['status' => 'success', 'message' => 'Pago exitoso']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Pago fallido']);
+    }
+
+} catch (\Stripe\Exception\CardException $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Error con la tarjeta: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Error en el pago: ' . $e->getMessage()]);
+}
 ?>

@@ -42,11 +42,11 @@ $result = $conn->query("SELECT * FROM products");
                     <div class="card-body">
                       <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
                       <p class="card-text"><?= htmlspecialchars($row['description']) ?></p>
-                      <p class="card-text precio">$<?= number_format($row['price'], 2) ?></p>
+                      <p class="card-text precio">$<?= number_format($row['price']/100, 2) ?></p>
                       <button class="btn btn-success agregar-carrito" 
                       data-id="<?= $row['id'] ?>" 
                       data-nombre="<?= htmlspecialchars($row['name']) ?>" 
-                      data-precio="<?= number_format($row['price'], 2) ?>">Agregar</button>
+                      data-precio="<?= number_format($row['price']/100, 2) ?>">Agregar</button>
 
                     </div>
                   </div>

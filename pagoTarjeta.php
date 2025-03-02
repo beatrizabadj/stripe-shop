@@ -10,7 +10,7 @@
     <header>
         <div class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
-            <a href="index.php" id="volver" class="btn btn-secondary">Volver</a>
+                <a href="index.php" id="volver" class="btn btn-secondary">Volver</a>
             </div>
         </div>
     </header>
@@ -28,7 +28,16 @@
                         <label for="card-element" class="form-label">Detalles de la tarjeta</label>
                         <div id="card-element" class="form-control p-2"></div>
                     </div>
-                    <button id="submit-button" class="btn btn-primary w-100 mt-3">Pagar</button>
+
+                    <!-- Checkbox de Términos y Condiciones -->
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="terms-checkbox">
+                        <label class="form-check-label" for="terms-checkbox">
+                            Acepto los <a href="../M12-Proyecto-PHP-Natalia-Beatriz/public/terminos.php" target="_blank">términos y condiciones</a>
+                        </label>
+                    </div>
+
+                    <button id="submit-button" class="btn btn-primary w-100 mt-3" disabled>Pagar</button>
                     <div id="card-errors" class="text-danger mt-2" role="alert"></div>
                 </form>
             </div>

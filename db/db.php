@@ -41,8 +41,7 @@ if ($conn->query($sqlProducts) === FALSE) {
 // Crear tabla de transacciones
 $sqlTransactions = "CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cust_name VARCHAR(100) NOT NULL,
-    cust_email VARCHAR(100) NOT NULL,
+    name VARCHAR(50) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -51,18 +50,19 @@ if ($conn->query($sqlTransactions) === FALSE) {
     die("Error al crear la tabla 'transactions': " . $conn->error);
 }
 
+
 // Array de productos
 $products = [
-    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 19.99],
-    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 39.99],
-    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 59.99],
-    ["Mochila Urbana", "Mochila resistente para el día a día", 29.99],
-    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 49.99],
-    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 14.99],
-    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 69.99],
-    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 34.99],
-    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 79.99],
-    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 24.99]
+    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 1999],
+    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 3999],
+    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 5999],
+    ["Mochila Urbana", "Mochila resistente para el día a día", 2999],
+    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 4999],
+    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 1499],
+    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 6999],
+    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 3499],
+    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 7999],
+    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 2499]
 ];
 
 // Preparar consultas para evitar duplicados
@@ -80,7 +80,7 @@ if (!$checkStmt || !$insertStmt) {
 foreach ($products as $product) {
     $productName = $product[0];
     $productDescription = $product[1];
-    $productPriceInCents = $product[2] * 100;  // Convertir el precio a centavos
+    $productPriceInCents = $product[2];  // Convertir el precio a centavos
 
     // Verificar si el producto ya existe en la base de datos
     $checkStmt->bind_param("s", $productName);
@@ -88,7 +88,6 @@ foreach ($products as $product) {
     $checkStmt->store_result();
 
     if ($checkStmt->num_rows === 0) {  // Si no existe, lo creamos en Stripe y lo insertamos en la BD
-        try {
             // Crear producto en Stripe
             $stripeProduct = \Stripe\Product::create([
                 'name' => $productName,
@@ -102,26 +101,31 @@ foreach ($products as $product) {
                 'product' => $stripeProduct->id,
             ]);
 
-            // Insertar en la base de datos
-            $insertStmt->bind_param("ssiss", $productName, $productDescription, $productPriceInCents, $stripeProduct->id, $stripePrice->id);
-            if ($insertStmt->execute()) {
-                echo "✅ Producto '{$productName}' insertado correctamente.<br>";
-            } else {
-                echo "❌ Error al insertar '{$productName}': " . $insertStmt->error . "<br>";
-            }
+    //         // Insertar en la base de datos
+    $insertStmt->bind_param("ssiss", $productName, $productDescription, $productPriceInCents, $stripeProduct->id, $stripePrice->id);
+    $insertStmt->execute();
+    //             echo "✅ Producto '{$productName}' insertado correctamente.<br>";
+    //         } else {
+    //             echo "❌ Error al insertar '{$productName}': " . $insertStmt->error . "<br>";
+    //         }
 
-        } catch (\Stripe\Exception\ApiErrorException $e) {
-            echo "❌ Error al crear el producto '{$productName}' en Stripe: " . $e->getMessage() . "<br>";
+    //     } catch (\Stripe\Exception\ApiErrorException $e) {
+    //         echo "❌ Error al crear el producto '{$productName}' en Stripe: " . $e->getMessage() . "<br>";
+    //     }
+    // } else {
+    //     echo "⚠️ Producto '{$productName}' ya existe en la base de datos. No se insertó de nuevo.<br>";
+    
         }
-    } else {
-        echo "⚠️ Producto '{$productName}' ya existe en la base de datos. No se insertó de nuevo.<br>";
     }
-}
+
 
 // Cerrar conexiones
 $checkStmt->close();
 $insertStmt->close();
 // $conn->close();
+// echo "✅ Base de datos insertados con éxito.";
 
-echo "✅ Productos insertados con éxito.";
+// echo "✅ Productos insertados con éxito.";
+echo '<a href="../index.php" class="btn btn-primary mt-3">Volver a la tienda</a>'
+
 ?>

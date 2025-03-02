@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
             // Obtener información del producto
             const id = this.dataset.id;
             const nombre = this.dataset.nombre;
-            const precio = parseFloat(this.dataset.precio); // Asegúrate de que este valor es un número
-
-            console.log(precio);  // Verificar el valor antes de agregar al carrito
+            const precio = parseFloat(this.dataset.precio); // El precio en centavos (sin convertir)
+            const imagen = this.dataset.imagen;  // Puedes agregar el campo de imagen
+            const descripcion = this.dataset.descripcion;  // Y la descripción
 
             // Verificar si el precio es un número válido
             if (isNaN(precio)) {
@@ -27,8 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (productoExistente) {
                 alert("Este producto ya está en el carrito.");
             } else {
-                // Agregar nuevo producto
-                carrito.push({ id, nombre, precio });
+                // Agregar nuevo producto con más detalles
+                carrito.push({ id, nombre, precio, imagen, descripcion });
                 console.log(carrito); // Verifica los productos antes de guardarlos
                 localStorage.setItem("carrito", JSON.stringify(carrito));
                 alert("Producto agregado al carrito.");
