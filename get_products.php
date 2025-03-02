@@ -1,20 +1,13 @@
 <?php
-require './db/db.php';
+require_once __DIR__ . '/db/db.php';
 
-header('Content-Type: application/json'); 
-$conn-> query("USE stripe_payments");
-
-$result = $conn->query("SELECT id, name, description, price, stripe_price_id FROM products");
+$sql = "SELECT id, name, description, price FROM products";
+$result = $conn->query($sql);
 
 $products = [];
+
 while ($row = $result->fetch_assoc()) {
-    $products[] = [
-        "id" => $row['id'],
-        "name" => $row['name'],
-        "description" => $row['description'],
-        "price" => number_format($row['price'] / 100, 2),
-        "stripe_price_id" => $row['stripe_price_id']
-    ];
+    $products[] = $row;
 }
 
 echo json_encode($products);
