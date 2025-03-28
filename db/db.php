@@ -30,6 +30,7 @@ $sqlProducts = "CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     price DECIMAL(10,2) NOT NULL,
+    image_url VARCHAR(255),
     stripe_product_id VARCHAR(255) UNIQUE NOT NULL,
     stripe_price_id VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -54,16 +55,16 @@ if ($conn->query($sqlTransactions) === FALSE) {
 
 // Array de productos
 $products = [
-    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 1999],
-    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 3999],
-    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 5999],
-    ["Mochila Urbana", "Mochila resistente para el día a día", 2999],
-    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 4999],
-    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 1499],
-    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 6999],
-    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 3499],
-    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 7999],
-    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 2499]
+    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 1999, "https://via.placeholder.com/300?text=Camiseta+Negra"],
+    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 3999, "https://via.placeholder.com/300?text=Pantalón+Vaquero"],
+    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 5999, "https://via.placeholder.com/300?text=Zapatillas+Deportivas"],
+    ["Mochila Urbana", "Mochila resistente para el día a día", 2999, "https://via.placeholder.com/300?text=Mochila+Urbana"],
+    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 4999, "https://via.placeholder.com/300?text=Reloj+Digital"],
+    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 1499, "https://via.placeholder.com/300?text=Gorra+Snapback"],
+    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 6999, "https://via.placeholder.com/300?text=Auriculares+Bluetooth"],
+    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 3499, "https://via.placeholder.com/300?text=Sudadera+con+Capucha"],
+    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 7999, "https://via.placeholder.com/300?text=Bolso+de+Cuero"],
+    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 2499, "https://via.placeholder.com/300?text=Gafas+de+Sol"]
 ];
 
 // Preparar consultas para evitar duplicados
@@ -127,6 +128,6 @@ $insertStmt->close();
 // echo "✅ Base de datos insertados con éxito.";
 
 // echo "✅ Productos insertados con éxito.";
-echo '<a href="../index.php" class="btn btn-primary mt-3">Volver a la tienda</a>'
+// echo '<a href="../index.php" class="btn btn-primary mt-3">Volver a la tienda</a>'
 
 ?>
