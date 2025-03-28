@@ -38,7 +38,8 @@ $result = $conn->query("SELECT * FROM products");
             <?php while ($row = $result->fetch_assoc()): ?>
                 <div class="col">
                   <div class="card w-100 shadow-sm">
-                  <img src="https://picsum.photos/200/300?random=<?= $row['id'] ?>" class="img-thumbnail" style="max-height: 300px">
+                  <!-- <img src="https://picsum.photos/200/300?random=<?= $row['id'] ?>" class="img-thumbnail" style="max-height: 300px"> -->
+                  <img src="<?= htmlspecialchars($row['image_url']) ?>" class="img-thumbnail" style="height: 400px">
                   <div class="card-body">
                       <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
                       <p class="card-text"><?= htmlspecialchars($row['description']) ?></p>

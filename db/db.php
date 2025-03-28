@@ -55,21 +55,21 @@ if ($conn->query($sqlTransactions) === FALSE) {
 
 // Array de productos
 $products = [
-    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 1999, "https://via.placeholder.com/300?text=Camiseta+Negra"],
-    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 3999, "https://via.placeholder.com/300?text=Pantalón+Vaquero"],
-    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 5999, "https://via.placeholder.com/300?text=Zapatillas+Deportivas"],
-    ["Mochila Urbana", "Mochila resistente para el día a día", 2999, "https://via.placeholder.com/300?text=Mochila+Urbana"],
-    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 4999, "https://via.placeholder.com/300?text=Reloj+Digital"],
-    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 1499, "https://via.placeholder.com/300?text=Gorra+Snapback"],
-    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 6999, "https://via.placeholder.com/300?text=Auriculares+Bluetooth"],
-    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 3499, "https://via.placeholder.com/300?text=Sudadera+con+Capucha"],
-    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 7999, "https://via.placeholder.com/300?text=Bolso+de+Cuero"],
-    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 2499, "https://via.placeholder.com/300?text=Gafas+de+Sol"]
+    ["Camiseta Negra", "Camiseta de algodón 100% en color negro", 1999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/camiseta-negra.png"],
+    ["Pantalón Vaquero", "Pantalón de mezclilla azul clásico", 3999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/pantalon-vaquero.png"],
+    ["Zapatillas Deportivas", "Zapatillas cómodas para correr", 5999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/zapatillas-deportivas.png"],
+    ["Mochila Urbana", "Mochila resistente para el día a día", 2999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/mochila-urbana.png"],
+    ["Reloj Digital", "Reloj con pantalla LED y cronómetro", 4999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/reloj-digital.png"],
+    ["Gorra Snapback", "Gorra ajustable con diseño moderno", 1499, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/gorra.png"],
+    ["Auriculares Bluetooth", "Auriculares inalámbricos con gran sonido", 6999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/auriculares.png"],
+    ["Sudadera con Capucha", "Sudadera gruesa con capucha para el frío", 3499, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/sudadera.png"],
+    ["Bolso de Cuero", "Bolso elegante de cuero genuino", 7999, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/bolso-cuero.png"],
+    ["Gafas de Sol", "Gafas con protección UV y estilo moderno", 2499, "http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/img/gafas.png"]
 ];
 
 // Preparar consultas para evitar duplicados
 $checkStmt = $conn->prepare("SELECT id FROM products WHERE name = ?");
-$insertStmt = $conn->prepare("INSERT INTO products (name, description, price, stripe_product_id, stripe_price_id) VALUES (?, ?, ?, ?, ?)");
+$insertStmt = $conn->prepare("INSERT INTO products (name, description, price, image_url, stripe_product_id, stripe_price_id) VALUES (?, ?, ?, ?, ?, ?)");
 
 // Verificar si las consultas preparadas se crearon correctamente
 if (!$checkStmt || !$insertStmt) {
@@ -83,6 +83,7 @@ foreach ($products as $product) {
     $productName = $product[0];
     $productDescription = $product[1];
     $productPriceInCents = $product[2];  // Convertir el precio a centavos
+    $productImageUrl = $product[3];
 
     // Verificar si el producto ya existe en la base de datos
     $checkStmt->bind_param("s", $productName);
@@ -104,7 +105,7 @@ foreach ($products as $product) {
             ]);
 
     //         // Insertar en la base de datos
-    $insertStmt->bind_param("ssiss", $productName, $productDescription, $productPriceInCents, $stripeProduct->id, $stripePrice->id);
+$insertStmt->bind_param("ssisss", $productName, $productDescription, $productPriceInCents, $productImageUrl, $stripeProduct->id, $stripePrice->id);
     $insertStmt->execute();
     //             echo "✅ Producto '{$productName}' insertado correctamente.<br>";
     //         } else {
