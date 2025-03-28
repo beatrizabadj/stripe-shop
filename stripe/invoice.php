@@ -1,8 +1,6 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/config.php';
-
-\Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
+require_once __DIR__ . '/../db/db.php';
 
 // Habilitar CORS
 header("Access-Control-Allow-Origin: *");
@@ -19,68 +17,67 @@ if (!$invoiceId) {
     exit;
 }
 
-try {
-    // Obtener la factura de Stripe
-    $invoice = \Stripe\Invoice::retrieve($invoiceId);
-
-    // Obtener el nombre del titular de la tarjeta desde la base de datos
-    $conn = new mysqli("localhost", "root", "", "stripe_payments");
-    if ($conn->connect_error) {
-        die("Conexión fallida: " . $conn->connect_error);
-    }
-
-    $stmt = $conn->prepare("SELECT name FROM transactions WHERE invoice_id = ?");
-    $stmt->bind_param("s", $invoiceId);
-    $stmt->execute();
-    $stmt->bind_result($cardholderName);
-    $stmt->fetch();
-    $stmt->close();
-    $conn->close();
-
-    // Generar la factura en HTML
-    $facturaHTML = "
-        <html>
-        <head>
-            <title>Factura</title>
-            <style>
-                body { font-family: Arial, sans-serif; }
-                h1 { color: #333; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-            </style>
-        </head>
-        <body>
-            <h1>Factura #{$invoice->id}</h1>
-            <p><strong>Cliente:</strong> {$cardholderName}</p>
-            <p><strong>Fecha:</strong> " . date('d/m/Y', $invoice->created) . "</p>
-            <p><strong>Monto:</strong> $" . number_format($invoice->total / 100, 2) . "</p>
-            <p><strong>Estado:</strong> {$invoice->status}</p>
-            <table>
-                <tr>
-                    <th>Descripción</th>
-                    <th>Monto</th>
-                </tr>
-    ";
-
-    foreach ($invoice->lines->data as $item) {
-        $facturaHTML .= "
-            <tr>
-                <td>{$item->description}</td>
-                <td>$" . number_format($item->amount / 100, 2) . "</td>
-            </tr>
-        ";
-    }
-
-    $facturaHTML .= "
-            </table>
-        </body>
-        </html>
-    ";
-
-    // Devolver la factura en formato HTML
-    echo json_encode(['status' => 'success', 'facturaHTML' => $facturaHTML]);
-} catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Error al obtener la factura: ' . $e->getMessage()]);
+// Conectar a la base de datos
+$conn = new mysqli("localhost", "root", "", "stripe_payments");
+if ($conn->connect_error) {
+    echo json_encode(['status' => 'error', 'message' => 'Conexión fallida a la base de datos: ' . $conn->connect_error]);
+    exit;
 }
+
+// Obtener la información de la transacción
+$stmt = $conn->prepare("SELECT name, amount, status, created_at, description FROM transactions WHERE invoice_id = ?");
+$stmt->bind_param("s", $invoiceId);
+$stmt->execute();
+$stmt->bind_result($cardholderName, $amount, $status, $createdAt, $description);
+$stmt->fetch();
+$stmt->close();
+$conn->close();
+
+if (!$cardholderName) {
+    echo json_encode(['status' => 'error', 'message' => 'No se encontró la factura en la base de datos']);
+    exit;
+}
+
+// Formatear fecha
+$fechaFactura = date('d/m/Y', strtotime($createdAt));
+
+// Generar la factura en HTML
+$facturaHTML = "
+    <html>
+    <head>
+        <title>Factura con ID</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .total { font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <h1>Factura #{$invoiceId}</h1>
+        <p><strong>Cliente:</strong> {$cardholderName}</p>
+        <p><strong>Fecha:</strong> {$fechaFactura}</p>
+        <p><strong>Estado:</strong> {$status}</p>
+        <table>
+            <tr>
+                <th>Descripción</th>
+                <th>Precio</th>
+            </tr>
+            <tr>
+                <td>{$description}</td>
+                <td>$" . number_format($amount, 2) . "</td>
+            </tr>
+            <tr>
+                <td class='total'>Total</td>
+                <td class='total'>$" . number_format($amount, 2) . "</td>
+            </tr>
+        </table>
+    </body>
+    </html>
+";
+
+// Devolver la factura en formato HTML dentro de la respuesta JSON
+echo json_encode(['status' => 'success', 'facturaHTML' => $facturaHTML]);
 ?>

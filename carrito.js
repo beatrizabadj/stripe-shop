@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const id = this.dataset.id;
             const nombre = this.dataset.nombre;
             const precio = parseFloat(this.dataset.precio); // El precio en centavos (sin convertir)
-            const imagen = this.dataset.imagen;  // Puedes agregar el campo de imagen
-            const descripcion = this.dataset.descripcion;  // Y la descripción
+            const imagen = this.dataset.imagen;  
+            const descripcion = this.dataset.descripcion; 
 
             // Verificar si el precio es un número válido
             if (isNaN(precio)) {
