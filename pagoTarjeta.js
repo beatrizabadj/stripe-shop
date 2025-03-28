@@ -1,4 +1,5 @@
 window.onload = () => {
+    // Limpiar el carrito si se hace clic en "Volver"
     const botonVolver = document.getElementById("volver");
     if (botonVolver) {
         botonVolver.addEventListener("click", () => {
@@ -18,21 +19,21 @@ window.onload = () => {
 
     const cartSummary = document.getElementById("cart-summary");
     let totalConIVA;
+
     // Función para calcular el subtotal y total
     const calcularTotales = () => {
         // Calcula el subtotal (sin IVA)
         const subtotal = productosSeleccionados.reduce((acc, producto) => {
             const precio = parseFloat(producto.precio);
-            const cantidad = parseInt(producto.cantidad, 10)
+            const cantidad = parseInt(producto.cantidad, 10);
             if (isNaN(precio)) {
                 console.error(`Producto con precio inválido:`, producto);
                 return acc; // Si el precio no es válido, no lo sumamos
             }
-    
+
             console.log(`Producto: ${producto.nombre}, Cantidad: ${cantidad}, Precio: ${precio}`);
             return acc + (precio * cantidad);
         }, 0);
-
 
         // Calcula el total con IVA (21%)
         const IVA = 0.21;
@@ -73,7 +74,7 @@ window.onload = () => {
                 </li>
             `;
         }
-    }
+    };
 
     // Llamar a calcularTotales al cargar la página
     calcularTotales();
@@ -86,14 +87,14 @@ window.onload = () => {
             localStorage.setItem('carrito', JSON.stringify(productosSeleccionados));
             calcularTotales(); // Actualizar el resumen sin recargar la página
         }
-    }
+    };
 
     // Función para eliminar un producto
     window.eliminarProducto = (index) => {
         productosSeleccionados.splice(index, 1); // Eliminar producto del carrito
         localStorage.setItem('carrito', JSON.stringify(productosSeleccionados));
         calcularTotales(); // Actualizar el resumen sin recargar la página
-    }
+    };
 
     // Stripe Elements (Pago en el mismo sitio)
     var stripe = Stripe('pk_test_51Qs6i4EDMQKkphbDxcrHaAsXVvayQz3GTpjGL0Ql42dnn61XxWKtQU4zHytX7FpusQSHYMkQMyP3OrFXUPBIueJy00vHDnZ2Hm');
@@ -126,36 +127,33 @@ window.onload = () => {
             if (result.error) {
                 document.getElementById('card-errors').textContent = result.error.message;
                 submitButton.disabled = false; // Rehabilitar el botón si hay un error
-
             } else {
                 // Enviar el token al backend para procesar el pago
                 fetch('http://localhost/M12-Proyecto-PHP-Natalia-Beatriz/stripe/checkout.php', {
                     method: 'POST',
                     body: JSON.stringify({
                         stripeToken: result.token.id,
-                        amount: Math.round(totalConIVA * 100), // Enviar el total con IVA multiplicado por 100 (Stripe espera el monto en centavos)
+                        amount: Math.round(totalConIVA * 100),
                         description: "Compra en tienda online",
-                        cardholderName: cardholderName
+                        cardholderName: cardholderName,
+                        products: productosSeleccionados
                     }),
                     headers: { 'Content-Type': 'application/json' }
                 })
                 .then(response => {
-                    console.log("Respuesta del servidor:", response); // Imprime la respuesta completa
                     if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor: ' + response.statusText);
+                        return response.text().then(text => {
+                            throw new Error(`Error del servidor: ${text}`);
+                        });
                     }
-                    return response.text(); // Primero obtener el texto de la respuesta
-                })
-                .then(text => {
-                    console.log("Texto de la respuesta:", text); // Imprime el texto de la respuesta
-                    return JSON.parse(text); // Intentar parsear el texto como JSON
+                    return response.json();
                 })
                 .then(data => {
+                    console.log("Respuesta del servidor:", data);
                     if (data.status === 'success') {
-                        window.invoiceId = data.invoiceId;
                         alert("Pago exitoso. ID de la factura: " + data.invoiceId);
                         localStorage.setItem('invoiceId', data.invoiceId);
-
+                        localStorage.removeItem('carrito'); // Limpiar el carrito después del pago
                         window.location.href = "/M12-Proyecto-PHP-Natalia-Beatriz/pagoExitoso.html";
                     } else {
                         alert("Error: " + data.message);
@@ -163,11 +161,12 @@ window.onload = () => {
                 })
                 .catch(error => {
                     console.error('Error al procesar la compra:', error);
-                    alert("Hubo un error al procesar tu pago. Por favor, intenta nuevamente.");
+                    alert("Hubo un error al procesar tu pago. Intenta nuevamente.");
                 });
             }
-        })
+        });
     });
+
     // Habilitar o deshabilitar el botón de pago según el checkbox
     document.getElementById('terms-checkbox').addEventListener('change', function () {
         document.getElementById('submit-button').disabled = !this.checked;

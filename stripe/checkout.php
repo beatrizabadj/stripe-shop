@@ -24,7 +24,7 @@ if (!$stripeToken || $amount <= 0 || !is_numeric($amount)) {
 }
 
 try {
-    // Crear un cliente de Stripe (si no existe)
+    // Crear cliente en stripe
     $customer = \Stripe\Customer::create([
         'email' => 'cliente@dominio.com', // Puedes pasar el correo electrónico del cliente aquí
         'source' => $stripeToken, // Token de la tarjeta
@@ -36,11 +36,11 @@ try {
 
     // Crear el pago usando el ID de la fuente del cliente
     $charge = \Stripe\Charge::create([
-        'amount' => $amount, // Monto en centavos
+        'amount' => $amount, 
         'currency' => 'usd',
         'description' => $description,
-        'customer' => $customer->id, // Usar el ID del cliente
-        'source' => $sourceId, // Usar el ID de la fuente del cliente
+        'customer' => $customer->id, 
+        'source' => $sourceId, 
     ]);
 
     if ($charge->status == 'succeeded') {
@@ -50,19 +50,20 @@ try {
         }
 
         // Crear la factura en Stripe
+        $invoice = \Stripe\Invoice::create([
+            'customer' => $customer->id,
+            'auto_advance' => true, 
+            'collection_method' => 'charge_automatically'
+        ]);
+
         $invoiceItem = \Stripe\InvoiceItem::create([
             'customer' => $customer->id,
-            'amount' => $amount, // Monto en centavos
+            'amount' => $amount, 
             'currency' => 'usd',
             'description' => $description,
         ]);
 
-        $invoice = \Stripe\Invoice::create([
-            'customer' => $customer->id,
-            'auto_advance' => true, // Esto avanza automáticamente la factura
-        ]);
 
-        // Agregar el IVA (21%)
         $taxRate = \Stripe\TaxRate::create([
             'display_name' => 'IVA',
             'percentage' => 21.0,
