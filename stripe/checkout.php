@@ -4,96 +4,93 @@ require_once __DIR__ . '/../config/config.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
-// Habilitar CORS
+// Configuración de headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-header('Content-Type: application/json'); // Asegurar que la respuesta sea JSON
+header('Content-Type: application/json');
 
-// Recibir datos del frontend
+// Obtener y validar datos
 $input = json_decode(file_get_contents("php://input"), true);
 $stripeToken = $input['stripeToken'] ?? null;
 $amount = $input['amount'] ?? 0;
-$description = $input['description'] ?? "Pago sin descripción";
-$cardholderName = $input['cardholderName'] ?? 'Anonimo'; // Recibir el nombre del titular
+$description = $input['description'] ?? "Compra en tienda";
+$cardholderName = $input['cardholderName'] ?? 'Cliente';
+$products = $input['products'] ?? [];
 
-// Validar que tenemos el token y un monto válido
-if (!$stripeToken || $amount <= 0 || !is_numeric($amount)) {
-    echo json_encode(['status' => 'error', 'message' => 'Datos inválidos']);
+if (!$stripeToken || $amount <= 0 || !is_numeric($amount) || empty($products)) {
+    echo json_encode(['status' => 'error', 'message' => 'Datos de pago inválidos']);
     exit;
 }
 
 try {
-    // Crear cliente en stripe
+    // 1. Crear cliente en Stripe
     $customer = \Stripe\Customer::create([
-        'email' => 'cliente@dominio.com', // Puedes pasar el correo electrónico del cliente aquí
-        'source' => $stripeToken, // Token de la tarjeta
-        'name' => $cardholderName, // Guardar el nombre del titular en Stripe
+        'email' => 'cliente@tienda.com',
+        'source' => $stripeToken,
+        'name' => $cardholderName,
     ]);
 
-    // Obtener el ID de la fuente de pago del cliente
-    $sourceId = $customer->default_source;
-
-    // Crear el pago usando el ID de la fuente del cliente
+    // 2. Crear cargo/pago
     $charge = \Stripe\Charge::create([
-        'amount' => $amount, 
+        'amount' => $amount,
         'currency' => 'usd',
         'description' => $description,
-        'customer' => $customer->id, 
-        'source' => $sourceId, 
+        'customer' => $customer->id,
     ]);
 
-    if ($charge->status == 'succeeded') {
+    // 3. Procesar solo si el pago fue exitoso
+    if ($charge->status === 'succeeded') {
         $conn = new mysqli("localhost", "root", "", "stripe_payments");
         if ($conn->connect_error) {
-            die("Conexión fallida: " . $conn->connect_error);
+            throw new Exception("Error de conexión a la base de datos");
         }
 
-        // Crear la factura en Stripe
-        $invoice = \Stripe\Invoice::create([
-            'customer' => $customer->id,
-            'auto_advance' => true, 
-            'collection_method' => 'charge_automatically'
-        ]);
+        // Generar ID único para la factura
+        $invoiceId = 'INV-' . time() . '-' . bin2hex(random_bytes(3));
+        $productsJson = json_encode($products);
+        $amountInEuros = $amount / 100; // Convertir a euros
 
-        $invoiceItem = \Stripe\InvoiceItem::create([
-            'customer' => $customer->id,
-            'amount' => $amount, 
-            'currency' => 'usd',
-            'description' => $description,
-        ]);
+        // Insertar transacción
+        $stmt = $conn->prepare("INSERT INTO transactions (invoice_id, name, amount, status, description, products) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssdsss", 
+            $invoiceId,
+            $cardholderName,
+            $amountInEuros,
+            $charge->status,
+            $description,
+            $productsJson
+        );
 
+        if ($stmt->execute()) {
+            $response = [
+                'status' => 'success',
+                'message' => 'Pago procesado correctamente',
+                'invoiceId' => $invoiceId,
+                'chargeId' => $charge->id
+            ];
+        } else {
+            throw new Exception("Error al guardar la transacción");
+        }
 
-        $taxRate = \Stripe\TaxRate::create([
-            'display_name' => 'IVA',
-            'percentage' => 21.0,
-            'inclusive' => false,
-        ]);
-
-        // Actualizar la factura con el impuesto
-        \Stripe\Invoice::update($invoice->id, [
-            'default_tax_rates' => [$taxRate->id],
-        ]);
-
-        // Finalizar la factura
-        $invoice->finalizeInvoice();
-
-        // Guardar la transacción en la base de datos
-        $status = "paid";
-        $stmt = $conn->prepare("INSERT INTO transactions (name, amount, status, invoice_id) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("sdss", $cardholderName, $amount, $status, $invoice->id);
-        $stmt->execute();
         $stmt->close();
         $conn->close();
 
-        echo json_encode(['status' => 'success', 'message' => 'Pago exitoso, factura generada', 'invoiceId' => $invoice->id]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Pago fallido']);
+        echo json_encode($response);
+        exit;
     }
 
+    throw new Exception("El pago no se completó correctamente");
+
 } catch (\Stripe\Exception\CardException $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Error con la tarjeta: ' . $e->getMessage()]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error en la tarjeta: ' . $e->getError()->message
+    ]);
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Error en el pago: ' . $e->getMessage()]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error: ' . $e->getMessage()
+    ]);
 }
 ?>

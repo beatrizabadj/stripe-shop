@@ -133,10 +133,14 @@ window.onload = () => {
                     method: 'POST',
                     body: JSON.stringify({
                         stripeToken: result.token.id,
-                        amount: Math.round(totalConIVA * 100),
+                        amount: Math.round(totalConIVA * 100), 
                         description: "Compra en tienda online",
                         cardholderName: cardholderName,
-                        products: productosSeleccionados
+                        products: productosSeleccionados.map(p => ({
+                            nombre: p.nombre,
+                            precio: parseFloat(p.precio) * 100, 
+                            cantidad: parseInt(p.cantidad || 1)
+                        }))
                     }),
                     headers: { 'Content-Type': 'application/json' }
                 })
