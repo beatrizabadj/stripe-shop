@@ -2,10 +2,11 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/config.php';
 
-// $servername = "localhost";
-// $username = "root";
-// $password = "root";
-// $dbname = "stripe_payments";
+$servername = getenv('DB_HOST');
+$username   = getenv('DB_USER');
+$password   = getenv('DB_PASS');
+$database   = getenv('DB_NAME');
+$port       = getenv('DB_PORT') ?: 3306;
 
 // Conectar al servidor MySQL
 $conn = new mysqli($servername, $username, $password);
