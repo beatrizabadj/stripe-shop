@@ -2,10 +2,10 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/config.php';
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "stripe_payments";
+// $servername = "localhost";
+// $username = "root";
+// $password = "root";
+// $dbname = "stripe_payments";
 
 // Conectar al servidor MySQL
 $conn = new mysqli($servername, $username, $password);
